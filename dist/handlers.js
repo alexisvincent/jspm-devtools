@@ -39,8 +39,15 @@ var makeHandlers = exports.makeHandlers = function makeHandlers(_ref) {
         if (typeof bundleTrigger === 'string' && req.originalUrl.endsWith(bundleTrigger) || typeof bundleTrigger == 'function' && bundleTrigger(req)) {
           _.log('requesting ' + req.url + ' triggering bundling');
           _.bundle(config.entries.join(' + ')).then(function (_ref2) {
-            var source = _ref2.source;
-            return res.end(source);
+            var source = _ref2.source,
+                sourceMap = _ref2.sourceMap;
+            return res.end(config.builder.options.sourceMaps === 'inline' || !sourceMap ? source : source + ('\n//# sourceMappingURL=' + bundleTrigger + '.map'));
+          });
+        } else if (req.originalUrl.endsWith('.map') && (typeof bundleTrigger === 'string' && req.originalUrl.indexOf(bundleTrigger) > 0 || typeof bundleTrigger == 'function' && bundleTrigger(req))) {
+          _.log('requesting ' + req.url + ' retrieving sourcemap');
+          _.bundle(config.entries.join(' + ')).then(function (_ref3) {
+            var sourceMap = _ref3.sourceMap;
+            return res.end(sourceMap);
           });
         } else {
           next();
