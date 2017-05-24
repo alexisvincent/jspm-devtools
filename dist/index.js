@@ -327,11 +327,23 @@ var init = function init() {
   // f: notify system that a file has changed
   _.fileChanged = function (absolutePath) {
     _.log('file-changed: ' + _path2.default.relative(config.directories.root, absolutePath));
+
+    // Knock the file out of the builder cache.
+    var url = _path2.default.relative(config.directories.baseURL, absolutePath);
+    if (_.builder.cache.compile.loads[url]) {
+      _.log('cache-evicted: ' + url);
+      delete _.builder.cache.compile.loads[url];
+      delete _.builder.cache.trace[url];
+    } else {
+      // TODO: should we bust the entire cache on node_modules/jspm_packages updates here?
+      _.log('ignored: ' + url);
+    }
+
     _.events.next({
       type: 'file-changed',
       absolutePath: absolutePath,
       relativePath: _path2.default.relative(config.directories.root, absolutePath),
-      url: _path2.default.relative(config.directories.baseURL, absolutePath)
+      url: url
     });
   };
 
